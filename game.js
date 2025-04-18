@@ -4,9 +4,9 @@ var userClickedPattern = [];
 
 var started       = false;
 var level         = 0;
-var allowRestart  = true;  // new flag
+var allowRestart  = true;
 
-// 1. Start game on pointerup, but only if restart’s allowed
+// Start game on pointerup (tap or click), but only when restart’s allowed
 $(document).on("pointerup", function(e) {
   if (!started && allowRestart && (e.pointerType === "mouse" || e.pointerType === "touch")) {
     $("#level-title").text("Level " + level);
@@ -15,7 +15,7 @@ $(document).on("pointerup", function(e) {
   }
 });
 
-// 2. Handle button “taps”
+// Handle button “taps”
 $(".btn").on("pointerup", function(e) {
   if (e.pointerType !== "mouse" && e.pointerType !== "touch") return;
 
@@ -33,19 +33,23 @@ function checkAnswer(currentLevel) {
       setTimeout(nextSequence, 1000);
     }
   } else {
-    // WRONG ANSWER: play sound + flash, then delay restart
+    // WRONG: trigger flash and block restart
     playSound("wrong");
     $("body").addClass("game-over");
-    $("#level-title").text("Game Over!");
-    
-    allowRestart = false;   // temporarily block restart
+    $("#level-title").text("Game Over");
+    allowRestart = false;
 
+    // 1) Remove the red flash quickly (200ms)
     setTimeout(function() {
       $("body").removeClass("game-over");
+    }, 200);
+
+    // 2) After a pause, show restart prompt and reset state (700ms)
+    setTimeout(function() {
       $("#level-title").text("Press Any Key or Tap to Restart");
-      startOver();          // reset state after the flash
-      allowRestart = true;  // now allow restart
-    }, 500);                // match this to your flash duration
+      startOver();
+      allowRestart = true;
+    }, 700);
   }
 }
 
@@ -67,10 +71,9 @@ function nextSequence() {
 }
 
 function animatePress(currentColor) {
-  var btn = $("#" + currentColor);
-  btn.addClass("pressed");
+  $("#" + currentColor).addClass("pressed");
   setTimeout(function() {
-    btn.removeClass("pressed");
+    $("#" + currentColor).removeClass("pressed");
   }, 100);
 }
 
@@ -79,9 +82,8 @@ function playSound(name) {
   audio.play();
 }
 
-// reset variables
 function startOver() {
-  level         = 0;
-  gamePattern   = [];
-  started       = false;
+  level       = 0;
+  gamePattern = [];
+  started     = false;
 }
