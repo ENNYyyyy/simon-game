@@ -1,12 +1,14 @@
+// game.js
+
 var buttonColours      = ["red", "blue", "green", "yellow"];
 var gamePattern        = [];
 var userClickedPattern = [];
 
 var started       = false;
 var level         = 0;
-var allowRestart  = true;
+var allowRestart  = true;  // blocks accidental immediate restart
 
-// Start game on pointerup (tap or click), but only when restart’s allowed
+// 1. Start game on pointerup (tap or click), only if restart’s allowed
 $(document).on("pointerup", function(e) {
   if (!started && allowRestart && (e.pointerType === "mouse" || e.pointerType === "touch")) {
     $("#level-title").text("Level " + level);
@@ -15,7 +17,7 @@ $(document).on("pointerup", function(e) {
   }
 });
 
-// Handle button “taps”
+// 2. Handle button “taps” via pointerup
 $(".btn").on("pointerup", function(e) {
   if (e.pointerType !== "mouse" && e.pointerType !== "touch") return;
 
@@ -29,27 +31,31 @@ $(".btn").on("pointerup", function(e) {
 
 function checkAnswer(currentLevel) {
   if (gamePattern[currentLevel] === userClickedPattern[currentLevel]) {
+    // correct so far
     if (userClickedPattern.length === gamePattern.length) {
       setTimeout(nextSequence, 1000);
     }
   } else {
-    // WRONG: trigger flash and block restart
+    // WRONG: flash red, then prompt restart after a pause
     playSound("wrong");
     $("body").addClass("game-over");
     $("#level-title").text("Game Over");
-    allowRestart = false;
 
-    // 1) Remove the red flash quickly (200ms)
+    allowRestart = false;
+    var flashDuration = 700;    // how long the red flash stays
+    var recoveryDelay = 700;    // pause before showing restart prompt
+
+    // 1) remove red flash
     setTimeout(function() {
       $("body").removeClass("game-over");
-    }, 200);
+    }, flashDuration);
 
-    // 2) After a pause, show restart prompt and reset state (700ms)
+    // 2) after the flash + delay, show prompt & reset
     setTimeout(function() {
       $("#level-title").text("Press Any Key or Tap to Restart");
       startOver();
       allowRestart = true;
-    }, 700);
+    }, flashDuration + recoveryDelay);
   }
 }
 
@@ -83,7 +89,7 @@ function playSound(name) {
 }
 
 function startOver() {
-  level       = 0;
-  gamePattern = [];
-  started     = false;
+  level         = 0;
+  gamePattern   = [];
+  started       = false;
 }
