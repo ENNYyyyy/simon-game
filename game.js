@@ -2,20 +2,20 @@ var buttonColours      = ["red", "blue", "green", "yellow"];
 var gamePattern        = [];
 var userClickedPattern = [];
 
-var started = false;
-var level   = 0;
+var started       = false;
+var level         = 0;
+var allowRestart  = true;  // new flag
 
-// 1. Start game on ANY pointer up (tap or click)
+// 1. Start game on pointerup, but only if restart’s allowed
 $(document).on("pointerup", function(e) {
-  // only if it’s a mouse or touch event
-  if (!started && (e.pointerType === "mouse" || e.pointerType === "touch")) {
+  if (!started && allowRestart && (e.pointerType === "mouse" || e.pointerType === "touch")) {
     $("#level-title").text("Level " + level);
     nextSequence();
     started = true;
   }
 });
 
-// 2. Handle button “taps” via pointerup
+// 2. Handle button “taps”
 $(".btn").on("pointerup", function(e) {
   if (e.pointerType !== "mouse" && e.pointerType !== "touch") return;
 
@@ -27,21 +27,25 @@ $(".btn").on("pointerup", function(e) {
   checkAnswer(userClickedPattern.length - 1);
 });
 
-// rest stays the same…
-
 function checkAnswer(currentLevel) {
   if (gamePattern[currentLevel] === userClickedPattern[currentLevel]) {
     if (userClickedPattern.length === gamePattern.length) {
       setTimeout(nextSequence, 1000);
     }
   } else {
+    // WRONG ANSWER: play sound + flash, then delay restart
     playSound("wrong");
     $("body").addClass("game-over");
-    $("#level-title").text("Game Over, Tap or Click to Restart");
+    $("#level-title").text("Game Over!");
+    
+    allowRestart = false;   // temporarily block restart
+
     setTimeout(function() {
       $("body").removeClass("game-over");
-    }, 200);
-    startOver();
+      $("#level-title").text("Press Any Key or Tap to Restart");
+      startOver();          // reset state after the flash
+      allowRestart = true;  // now allow restart
+    }, 500);                // match this to your flash duration
   }
 }
 
@@ -75,6 +79,7 @@ function playSound(name) {
   audio.play();
 }
 
+// reset variables
 function startOver() {
   level         = 0;
   gamePattern   = [];
